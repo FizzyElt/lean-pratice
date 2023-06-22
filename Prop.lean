@@ -32,14 +32,23 @@ example : (p ∨ q) ∨ r ↔ p ∨ (q ∨ r) :=
       (fun hqr => Or.imp_left Or.inr hqr)⟩
 
 -- distributivity
-example : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := sorry
-example : p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r) := sorry
+example : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := 
+  Iff.intro 
+    (fun ⟨hp, hqr⟩ => hqr.imp (And.intro hp) (And.intro hp)) 
+    (fun h : (p ∧ q) ∨ (p ∧ r) => 
+      h.elim 
+        (fun hpq => And.imp_right Or.inl hpq) 
+        (fun hpr => And.imp_right Or.inr hpr))
+example : p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r) := 
+  Iff.intro
+    (fun h => h.elim (fun hp => ⟨Or.inl hp, Or.inl hp⟩) (fun hqr => And.imp Or.inr Or.inr hqr ))
+    (And.rec <| .rec (fun _ => .inl ·) (.imp_right ∘ .intro))
 
 -- other properties
-example : (p → (q → r)) ↔ (p ∧ q → r) := sorry
-example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := sorry
-example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := sorry
-example : ¬p ∨ ¬q → ¬(p ∧ q) := sorry
+example : (p → (q → r)) ↔ (p ∧ q → r) := ⟨fun h ⟨hp, hq⟩ => h hp hq, fun h hp hq => h ⟨hp, hq⟩⟩
+example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := ⟨fun h => ⟨h ∘ Or.inl, h ∘ Or.inr⟩, fun ⟨hp, hq⟩ => Or.rec hp hq⟩
+example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := ⟨fun h => ⟨h ∘ Or.inl, h ∘ Or.inr⟩, fun ⟨hp, hq⟩ => Or.rec hp hq⟩
+example : ¬p ∨ ¬q → ¬(p ∧ q) := fun h => h.elim (fun hp => mt (·.1) hp) (fun hq => mt (·.2) hq)
 example : ¬(p ∧ ¬p) := sorry
 example : p ∧ ¬q → ¬(p → q) := sorry
 example : ¬p → (p → q) := sorry
