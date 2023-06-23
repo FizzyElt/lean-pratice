@@ -6,6 +6,7 @@ variable (p q r : Prop)
 
 -- commutativity of ∧ and ∨
 example : p ∧ q ↔ q ∧ p := ⟨fun h : p ∧ q => ⟨h.right, h.left⟩, fun h : q ∧ p => ⟨h.right, h.left⟩⟩
+
 example : p ∨ q ↔ q ∨ p := 
   ⟨fun h : p ∨ q => h.elim (fun hp => Or.inr hp) (fun hq => Or.inl hq),
   fun h : q ∨ p => h.elim (fun hp => Or.inr hp) (fun hq => Or.inl hq)⟩
@@ -39,6 +40,7 @@ example : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) :=
       h.elim 
         (fun hpq => And.imp_right Or.inl hpq) 
         (fun hpr => And.imp_right Or.inr hpr))
+
 example : p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r) := 
   Iff.intro
     (fun h => h.elim (fun hp => ⟨Or.inl hp, Or.inl hp⟩) (fun hqr => And.imp Or.inr Or.inr hqr ))
@@ -46,25 +48,24 @@ example : p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r) :=
 
 -- other properties
 example : (p → (q → r)) ↔ (p ∧ q → r) := ⟨fun h ⟨hp, hq⟩ => h hp hq, fun h hp hq => h ⟨hp, hq⟩⟩
+
 example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := ⟨fun h => ⟨h ∘ Or.inl, h ∘ Or.inr⟩, fun ⟨hp, hq⟩ => Or.rec hp hq⟩
+
 example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := ⟨fun h => ⟨h ∘ Or.inl, h ∘ Or.inr⟩, fun ⟨hp, hq⟩ => Or.rec hp hq⟩
+
 example : ¬p ∨ ¬q → ¬(p ∧ q) := fun h => h.elim (fun hp => mt (·.1) hp) (fun hq => mt (·.2) hq)
-example : ¬(p ∧ ¬p) := sorry
-example : p ∧ ¬q → ¬(p → q) := sorry
-example : ¬p → (p → q) := sorry
-example : (¬p ∨ q) → (p → q) := sorry
-example : p ∨ False ↔ p := sorry
-example : p ∧ False ↔ False := sorry
-example : (p → q) → (¬q → ¬p) := sorry
 
+example : ¬(p ∧ ¬p) := Not.intro (fun ⟨hp,hn⟩ => hn hp)
 
-section
-  variable (p q r : Prop)
-  variable (h : (p ∨ q) ∨ r)
-  variable (hr : r)
-  #check h.elim 
-    (fun hpq => Or.imp_right Or.inl hpq) 
-    (fun hr => Or.inr (Or.inr hr))
+example : p ∧ ¬q → ¬(p → q) := fun ⟨hp, hq⟩ h => hq (h hp)
 
-  #check @Or.inr p (q ∨ r) (@Or.inr q r hr)
-end
+example : ¬p → (p → q) := fun hnp hp => absurd hp hnp
+
+example : (¬p ∨ q) → (p → q) := fun h hp => h.elim (fun hnp => absurd hp hnp) (fun hq => hq)
+
+example : p ∨ False ↔ p := Iff.intro (fun h => h.elim (fun hp => hp) (fun false => false.elim)) (fun h => Or.inl h)
+
+example : p ∧ False ↔ False := Iff.intro (fun h => h.right) (fun h => ⟨h.elim, h⟩)
+
+example : (p → q) → (¬q → ¬p) := fun h hnq => hnq.imp h
+
