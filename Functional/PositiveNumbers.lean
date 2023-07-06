@@ -47,6 +47,13 @@ def Even.toNat : Even → Nat
 instance : ToString Even where
   toString n := toString n.toNat
 
+instance : OfNat Even (n + 1) where
+  ofNat := 
+    let rec natPlusOne : Nat → Even
+      | 0 => Even.zero
+      | k + 1 => Even.succ (natPlusOne k)
+    natPlusOne n
+
 def four := Even.succ (Even.succ Even.zero)
 def six := Even.succ (Even.succ (Even.succ Even.zero))
 def two := Even.succ Even.zero
