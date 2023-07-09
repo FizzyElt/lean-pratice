@@ -49,7 +49,7 @@ example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) :=
   Iff.intro 
     (fun h => fun x => 
       Or.elim (em (p x)) 
-        (fun hpx => fun px => False.elim (h ⟨x, hpx⟩)) 
+        (fun hpx => False.elim (h ⟨x, hpx⟩)) 
         (fun hnpx => hnpx)) 
     (fun h => fun ⟨x, hpx⟩ => h x hpx)
 example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) := sorry
