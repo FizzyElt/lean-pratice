@@ -39,9 +39,19 @@ example : (∀ x, p x) ↔ ¬ (∃ x, ¬ p x) :=
 example : (∃ x, p x) ↔ ¬ (∀ x, ¬ p x) := 
   Iff.intro 
     (fun ⟨x, hpx⟩ => fun h => (h x) hpx) 
-    (fun h => sorry) 
+    (fun hnAxpx => 
+      byContradiction 
+        (fun hnExpx => hnAxpx 
+        (fun x => 
+        (fun hpx => hnExpx ⟨x, hpx⟩)))) 
 
-example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) := sorry
+example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) := 
+  Iff.intro 
+    (fun h => fun x => 
+      Or.elim (em (p x)) 
+        (fun hpx => fun px => False.elim (h ⟨x, hpx⟩)) 
+        (fun hnpx => hnpx)) 
+    (fun h => fun ⟨x, hpx⟩ => h x hpx)
 example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) := sorry
 
 example : (∀ x, p x → r) ↔ (∃ x, p x) → r := sorry
