@@ -52,9 +52,20 @@ example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) :=
         (fun hpx => False.elim (h ⟨x, hpx⟩)) 
         (fun hnpx => hnpx)) 
     (fun h => fun ⟨x, hpx⟩ => h x hpx)
-example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) := sorry
 
-example : (∀ x, p x → r) ↔ (∃ x, p x) → r := sorry
+example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) := 
+  Iff.intro 
+    (fun hnApx => byContradiction (fun hnEnpx => 
+      have hApx : ∀ x, p x := fun x => 
+        byContradiction (fun hnpx => hnEnpx ⟨x, hnpx⟩)
+      show False from hnApx hApx
+    )) 
+    (fun ⟨x, hnpx⟩ => fun hnApx => hnpx (hnApx x))
+
+example : (∀ x, p x → r) ↔ (∃ x, p x) → r := 
+  Iff.intro 
+    (fun hApxr => fun ⟨x, hpx⟩ => hApxr x hpx) 
+    (fun hEpxr => fun x => fun hpx => hEpxr ⟨x, hpx⟩)
 
 example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r := 
   Iff.intro
@@ -76,4 +87,10 @@ example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
                     show False from hnex hex)
               show False from hnap hap)))
 
-example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) := sorry
+example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) := 
+  Iff.intro 
+    (fun ⟨x, hrpx⟩ => fun r => ⟨x, hrpx r⟩)
+    (fun hrEpx => 
+      byCases 
+        (fun hEpx : ∃ x, p x  => sorry) 
+        (fun nnEpx : ¬ ∃ x, p x => sorry))
