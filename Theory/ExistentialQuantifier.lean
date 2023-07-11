@@ -94,3 +94,18 @@ example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
       byCases 
         (fun hEpx : ∃ x, p x  => sorry) 
         (fun nnEpx : ¬ ∃ x, p x => sorry))
+
+
+
+example : (∀ x, p x ∧ q x) ↔ (∀ x, p x) ∧ (∀ x, q x) := 
+  Iff.intro 
+    (fun h => ⟨(fun x => (h x).left),(fun x => (h x).right)⟩)
+    (fun ⟨hpx, hqx⟩ => fun x => ⟨hpx x, hqx x⟩)
+
+example : (∀ x, p x → q x) → (∀ x, p x) → (∀ x, q x) := 
+  fun hpxqx => fun hpx => fun x => hpxqx x (hpx x)
+  
+example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x := 
+  fun h => h.elim
+    (fun hpx => fun x => Or.inl (hpx x))
+    (fun hqx => fun x => Or.inr (hqx x))
