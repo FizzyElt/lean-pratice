@@ -9,7 +9,7 @@ instance : HAppend (List α) (NonEmptyList α) (NonEmptyList α) where
   | x :: xs, ys => { head := x, tail := xs ++ (ys.head :: ys.tail)}
 
 def list := [1]
-def nonEmptyList : NonEmptyList Nat := { head := 2, tail := [3,4,5,6,7] }
+def nonEmptyList : NonEmptyList Nat := { head := 2, tail := [3, 4, 5, 6, 7] }
 
 #eval list ++ nonEmptyList
 
