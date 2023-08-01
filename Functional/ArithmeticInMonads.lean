@@ -178,3 +178,45 @@ def applyPrimReaderExcept (op : String) (x : Int) (y : Int) : ReaderExcept Strin
   match env.lookup op with
     | none => pure 0
     | some f => pure (f x y)
+
+structure WithLog (logged : Type) (α : Type) where
+  log : List logged
+  val : α
+
+def WithLog.andThen (result : WithLog α β) (next : β → WithLog α γ) : WithLog α γ :=
+  let {log := thisOut, val := thisRes} := result
+  let {log := nextOut, val := nextRes} := next thisRes
+  {log := thisOut ++ nextOut, val := nextRes}
+
+def WithLog.ok (x : β) : WithLog α β := {log := [], val := x}
+
+def WithLog.save (data : α) : WithLog α Unit :=
+  {log := [data], val := ()}
+
+instance : Monad (WithLog logged) where
+  pure x := { log := [], val := x }
+  bind := WithLog.andThen
+
+inductive ToTrace (α : Type) : Type where
+  | trace : α → ToTrace α
+
+def applyTraced : ToTrace (Prim Empty) → Int → Int → WithLog (Prim Empty × Int × Int) Int
+  | ToTrace.trace Prim.plus, x, y => WithLog.save (Prim.plus, x ,y) >>= fun () => pure (x + y)
+  | ToTrace.trace Prim.minus, x, y => WithLog.save (Prim.plus, x ,y) >>= fun () => pure (x - y)
+  | ToTrace.trace Prim.times, x, y => WithLog.save (Prim.plus, x ,y) >>= fun () => pure (x * y)
+
+
+deriving instance Repr for WithLog
+deriving instance Repr for Empty
+deriving instance Repr for Prim
+
+
+#eval evaluateM applyTraced 
+  (Expr.prim 
+    (Prim.other (ToTrace.trace Prim.times)) 
+      (Expr.prim (Prim.other (ToTrace.trace Prim.plus)) 
+        (Expr.const 1) 
+        (Expr.const 2)) 
+      (Expr.prim (Prim.other (ToTrace.trace Prim.minus)) 
+        (Expr.const 3) 
+        (Expr.const 4)))
