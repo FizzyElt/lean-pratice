@@ -1,5 +1,6 @@
 structure Config where
   useASCII : Bool := false
+  showDotFile : Bool := false
   currentPrefix : String := ""
 
 def Config.preFile (cfg : Config) :=
@@ -36,7 +37,9 @@ Options:
   
 def configFromArgs : List String → Option Config
   | [] => some {} -- both fields default
+  | ["-a"] => some {showDotFile := true}
   | ["--ascii"] => some {useASCII := true}
+  | ["--ascii", "-a"] | ["-a", "--ascii"] => some {useASCII := true,  showDotFile := true}
   | _ => none
 
 
@@ -69,7 +72,11 @@ def showDirName (dir : String) : ConfigIO Unit := do
 partial def dirTree (path : System.FilePath) : ConfigIO Unit := do
   match ← toEntry path with
     | none => pure ()
-    | some (.file name) => showFileName name
+    | some (.file name) => 
+      if !(← read).showDotFile && name.startsWith "." then 
+        pure () 
+      else 
+        showFileName name
     | some (.dir name) =>
       showDirName name
       let contents ← path.readDir
