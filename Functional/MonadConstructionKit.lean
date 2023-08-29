@@ -2,6 +2,8 @@ structure Config where
   useASCII : Bool := false
   showDotFile : Bool := false
   currentPrefix : String := ""
+
+structure TotalInfo where
   file : Nat := 0
   dir : Nat := 0
 
@@ -21,10 +23,10 @@ def Config.inDirectory (cfg : Config) : Config :=
   {cfg with currentPrefix := cfg.preDir ++ " " ++ cfg.currentPrefix}
 
 
-abbrev ConfigIO (α : Type) : Type := StateT Config IO α
+abbrev TotalInfoIO (α : Type) : Type := StateT TotalInfo IO α
 
 
-def ConfigIO.run (action : ConfigIO α) (cfg : Config) : IO α :=
+def TotalInfoIO.run (action : TotalInfoIO α) (cfg : TotalInfo) : IO α :=
  (fun v => v.fst) <$> (action cfg) 
 
 
@@ -60,30 +62,30 @@ def toEntry (path : System.FilePath) : IO (Option Entry) := do
   | some name =>
     pure (some (if (← path.isDir) then .dir name else .file name))
 
-def showFileName (file : String) : ConfigIO Unit := do
-  IO.println s!"{(← get).currentPrefix} {file}"
+def showFileName (cfg : Config) (file : String) : TotalInfoIO Unit := 
+  IO.println s!"{cfg.currentPrefix} {file}"
 
-def showDirName (dir : String) : ConfigIO Unit := do
-  IO.println s!"{(← get).currentPrefix} {dir}/"
+def showDirName (cfg : Config) (dir : String) : TotalInfoIO Unit := 
+  IO.println s!"{cfg.currentPrefix} {dir}/"
 
-def showTotal : ConfigIO Unit := do
+def showTotal : TotalInfoIO Unit := do
   IO.println s!"{(← get).file} files in {(← get).dir} directories"
 
-partial def dirTree (path : System.FilePath) : ConfigIO Unit := do
+partial def dirTree (path : System.FilePath) (cfg : Config) : TotalInfoIO Unit := do
   match ← toEntry path with
     | none => pure ()
     | some (.file name) => 
-      if !(← get).showDotFile && name.startsWith "." then 
+      if !cfg.showDotFile && name.startsWith "." then 
         pure () 
       else 
-        modify fun cfg => {cfg with file := cfg.file + 1}
-        showFileName name
+        modify fun total => {total with file := total.file + 1}
+        showFileName cfg name
     | some (.dir name) =>
-      showDirName name
+      showDirName cfg name
       let contents ← path.readDir
-      modify fun cfg => {cfg with dir := cfg.dir + 1}
+      modify fun total => {total with dir := total.dir + 1}
       (doList contents.toList fun d =>
-          dirTree d.path)
+          dirTree d.path cfg.inDirectory)
 
 
 
@@ -92,8 +94,7 @@ partial def dirTree (path : System.FilePath) : ConfigIO Unit := do
 def main (args : List String) : IO UInt32 := do
     match configFromArgs args with
     | some config =>
-      (dirTree (← IO.currentDir) >>= fun _ => showTotal).run config
-      
+      ((dirTree (← IO.currentDir) config) >>= fun _ => showTotal).run (TotalInfo.mk 0 0)
       pure 0
     | none =>
       IO.eprintln s!"Didn't understand argument(s) \n"
