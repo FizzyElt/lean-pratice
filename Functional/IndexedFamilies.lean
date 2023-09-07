@@ -33,6 +33,10 @@ def Vect.snoc : Vect α n → α → Vect α (n + 1)
 def Vect.reverse : Vect α n → Vect α n
  | .nil => .nil
  | .cons x xs => (reverse xs).snoc x
+
+def Vect.drop : (n : Nat) → Vect α (k + n) → Vect α k 
+  | 0, a => a
+  | n + 1, .cons _ xs => drop n xs  
   
 def Vect.take : (n : Nat) → Vect α (k + n) → Vect α n 
   | 0, _ => .nil
